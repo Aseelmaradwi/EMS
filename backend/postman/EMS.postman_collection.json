@@ -1,0 +1,2299 @@
+{
+  "info": {
+    "_postman_id": "ems-api-collection",
+    "name": "EMS API Collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Employee Management System API collection - With Auto JWT Token Management"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "",
+                  "if (response.success && response.data && response.data.token) {",
+                  "    pm.environment.set(\"token\", response.data.token);",
+                  "    pm.test(\"âœ… Token stored in environment\", function() {",
+                  "        pm.expect(pm.environment.get(\"token\")).to.be.a(\"string\");",
+                  "    });",
+                  "    console.log(\"ðŸ” Token stored\", pm.environment.get(\"token\").substring(0, 20) + \"...\");",
+                  "} else {",
+                  "    console.warn(\"âš ï¸ No token in response\", response);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"Secure@123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Register Success",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"User registered successfully.\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"uuid\",\n      \"name\": \"John Doe\",\n      \"email\": \"john.doe@example.com\",\n      \"status\": \"active\",\n      \"last_login_at\": null,\n      \"role\": {\n        \"id\": \"uuid\",\n        \"name\": \"employee\"\n      }\n    },\n    \"token\": \"jwt-token\"\n  },\n  \"meta\": {\n    \"token_type\": \"Bearer\",\n    \"expires_in\": 3600\n  }\n}"
+            },
+            {
+              "name": "Register Error",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": false,\n  \"message\": \"Validation failed.\",\n  \"errors\": {\n    \"email\": [\n      \"The email has already been taken.\"\n    ]\n  },\n  \"code\": \"VALIDATION_ERROR\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "",
+                  "pm.test(\"Store Token\", function () {",
+                  "    if (res.success && res.data && res.data.token) {",
+                  "        pm.environment.set(\"token\", res.data.token);",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test(\"Store User Info\", function () {",
+                  "    if (res.data && res.data.user) {",
+                  "        pm.environment.set(\"user_id\", res.data.user.id);",
+                  "        pm.environment.set(\"role\", res.data.user.role.name);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"Secure@123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Login Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Login successful.\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"uuid\",\n      \"name\": \"John Doe\",\n      \"email\": \"john.doe@example.com\",\n      \"status\": \"active\",\n      \"last_login_at\": \"2026-03-22T12:00:00Z\",\n      \"role\": {\n        \"id\": \"uuid\",\n        \"name\": \"employee\"\n      }\n    },\n    \"token\": \"jwt-token\"\n  },\n  \"meta\": {\n    \"token_type\": \"Bearer\",\n    \"expires_in\": 3600\n  }\n}"
+            },
+            {
+              "name": "Login Error",
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": false,\n  \"message\": \"Invalid credentials.\",\n  \"errors\": {\n    \"email\": [\n      \"The provided credentials are incorrect or account is inactive.\"\n    ]\n  },\n  \"code\": \"AUTH_INVALID_CREDENTIALS\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "",
+                  "pm.test(\"Logout should return 200 NOT 500\", function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "if (response.success) {",
+                  "    pm.test(\"âœ… Logout successful\", function() {",
+                  "        pm.expect(response.success).to.be.true;",
+                  "        pm.expect(response.message).to.equal(\"Logged out successfully\");",
+                  "    });",
+                  "    pm.environment.unset(\"token\");",
+                  "    console.log(\"ðŸ”“ Logout successful - Token invalidated\");",
+                  "} else {",
+                  "    console.warn(\"âš ï¸ Logout failed\", response);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Logout Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Logged out successfully\",\n  \"data\": {},\n  \"meta\": {}\n}"
+            },
+            {
+              "name": "Logout Error",
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": false,\n  \"message\": \"Unauthenticated.\",\n  \"errors\": {},\n  \"code\": \"AUTH_UNAUTHORIZED\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.success && res.data && res.data.token) {",
+                  "    pm.environment.set(\"token\", res.data.token);",
+                  "}",
+                  "if (res.data && res.data.user) {",
+                  "    pm.environment.set(\"user_id\", res.data.user.id);",
+                  "    pm.environment.set(\"employee_user_id\", res.data.user.id);",
+                  "    pm.environment.set(\"role\", res.data.user.role.name);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@ems.com\",\n  \"password\": \"password\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login Manager",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.success && res.data && res.data.token) {",
+                  "    pm.environment.set(\"token\", res.data.token);",
+                  "}",
+                  "if (res.data && res.data.user) {",
+                  "    pm.environment.set(\"user_id\", res.data.user.id);",
+                  "    pm.environment.set(\"role\", res.data.user.role.name);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"manager@ems.com\",\n  \"password\": \"password\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login Employee",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.success && res.data && res.data.token) {",
+                  "    pm.environment.set(\"token\", res.data.token);",
+                  "}",
+                  "if (res.data && res.data.user) {",
+                  "    pm.environment.set(\"user_id\", res.data.user.id);",
+                  "    pm.environment.set(\"employee_user_id\", res.data.user.id);",
+                  "    pm.environment.set(\"role\", res.data.user.role.name);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"employee@ems.com\",\n  \"password\": \"password\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "",
+                  "if (response.success && response.data && response.data.token) {",
+                  "    pm.environment.set(\"token\", response.data.token);",
+                  "    pm.test(\"âœ… Token refreshed in environment\", function() {",
+                  "        pm.expect(pm.environment.get(\"token\")).to.be.a(\"string\");",
+                  "    });",
+                  "    console.log(\"ðŸ”„ Token refreshed\", pm.environment.get(\"token\").substring(0, 20) + \"...\");",
+                  "} else {",
+                  "    console.warn(\"âš ï¸ Token refresh failed\", response);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Refresh Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Token refreshed successfully.\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"uuid\",\n      \"name\": \"John Doe\",\n      \"email\": \"john.doe@example.com\",\n      \"status\": \"active\",\n      \"last_login_at\": \"2026-03-22T12:00:00Z\",\n      \"role\": {\n        \"id\": \"uuid\",\n        \"name\": \"employee\"\n      }\n    },\n    \"token\": \"new-jwt-token\"\n  },\n  \"meta\": {\n    \"token_type\": \"Bearer\",\n    \"expires_in\": 3600\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Me",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Me Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Authenticated user fetched successfully.\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"uuid\",\n      \"name\": \"John Doe\",\n      \"email\": \"john.doe@example.com\",\n      \"status\": \"active\",\n      \"last_login_at\": \"2026-03-22T12:00:00Z\",\n      \"role\": {\n        \"id\": \"uuid\",\n        \"name\": \"employee\"\n      }\n    }\n  },\n  \"meta\": {}\n}"
+            },
+            {
+              "name": "Me Error",
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": false,\n  \"message\": \"Unauthenticated.\",\n  \"errors\": {},\n  \"code\": \"AUTH_UNAUTHORIZED\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "GET Users",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Admin list users returns success\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json().success).to.equal(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users?search={{search}}&role={{role}}&role_id={{role_id}}&status={{status}}&page={{page}}&per_page={{per_page}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "{{search}}"
+                },
+                {
+                  "key": "role",
+                  "value": "{{role}}"
+                },
+                {
+                  "key": "role_id",
+                  "value": "{{role_id}}"
+                },
+                {
+                  "key": "status",
+                  "value": "{{status}}"
+                },
+                {
+                  "key": "page",
+                  "value": "{{page}}"
+                },
+                {
+                  "key": "per_page",
+                  "value": "{{per_page}}"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "List Users Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Users fetched successfully.\",\n  \"data\": {\n    \"users\": [\n      {\n        \"id\": \"uuid\",\n        \"name\": \"Admin User\",\n        \"email\": \"admin@example.com\",\n        \"status\": \"active\",\n        \"last_login_at\": null,\n        \"created_at\": \"2026-03-25T00:00:00.000000Z\",\n        \"updated_at\": \"2026-03-25T00:00:00.000000Z\",\n        \"role\": {\n          \"id\": \"uuid\",\n          \"name\": \"admin\"\n        }\n      }\n    ]\n  },\n  \"meta\": {\n    \"current_page\": 1,\n    \"per_page\": 15,\n    \"total\": 1,\n    \"last_page\": 1\n  }\n}"
+            },
+            {
+              "name": "List Users Admin Required",
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": false,\n  \"message\": \"Forbidden. Admin access is required.\",\n  \"errors\": [],\n  \"code\": \"AUTH_FORBIDDEN\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET User By ID",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}",
+                  "",
+                  "if (!pm.environment.get(\"user_id\")) {",
+                  "    throw new Error(\"user_id is not set. Run Create User first.\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{user_id}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Get User Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"User fetched successfully.\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"uuid\",\n      \"name\": \"John Doe\",\n      \"email\": \"john.doe@example.com\",\n      \"status\": \"active\",\n      \"last_login_at\": null,\n      \"created_at\": \"2026-03-25T00:00:00.000000Z\",\n      \"updated_at\": \"2026-03-25T00:00:00.000000Z\",\n      \"role\": {\n        \"id\": \"uuid\",\n        \"name\": \"employee\"\n      }\n    }\n  },\n  \"meta\": {}\n}"
+            },
+            {
+              "name": "Get User Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": false,\n  \"message\": \"User not found.\",\n  \"errors\": {},\n  \"code\": \"USER_NOT_FOUND\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST Create User",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "let res = pm.response.json();",
+                  "",
+                  "if (res.success && res.data && res.data.user) {",
+                  "    pm.environment.set(\"user_id\", res.data.user.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Created User\",\n  \"email\": \"created.user@example.com\",\n  \"password\": \"Secure@123\",\n  \"role\": \"employee\",\n  \"role_id\": \"{{target_role_id}}\",\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Create User Success",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"User created successfully.\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"uuid\",\n      \"name\": \"Created User\",\n      \"email\": \"created.user@example.com\",\n      \"status\": \"active\",\n      \"last_login_at\": null,\n      \"created_at\": \"2026-03-25T00:00:00.000000Z\",\n      \"updated_at\": \"2026-03-25T00:00:00.000000Z\",\n      \"role\": {\n        \"id\": \"uuid\",\n        \"name\": \"employee\"\n      }\n    }\n  },\n  \"meta\": {}\n}"
+            },
+            {
+              "name": "Create User Forbidden",
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": false,\n  \"message\": \"Forbidden. Admin access is required.\",\n  \"errors\": [],\n  \"code\": \"AUTH_FORBIDDEN\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT Update User",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}",
+                  "",
+                  "if (!pm.environment.get(\"user_id\")) {",
+                  "    throw new Error(\"user_id is not set. Run Create User first.\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated User\",\n  \"email\": \"updated.user@example.com\",\n  \"password\": \"Updated@123\",\n  \"role\": \"manager\",\n  \"role_id\": \"{{target_role_id}}\",\n  \"status\": \"inactive\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{user_id}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Update User Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"User updated successfully.\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"uuid\",\n      \"name\": \"Updated User\",\n      \"email\": \"updated.user@example.com\",\n      \"status\": \"inactive\",\n      \"last_login_at\": null,\n      \"created_at\": \"2026-03-25T00:00:00.000000Z\",\n      \"updated_at\": \"2026-03-25T00:00:00.000000Z\",\n      \"role\": {\n        \"id\": \"uuid\",\n        \"name\": \"employee\"\n      }\n    }\n  },\n  \"meta\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE User",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}",
+                  "",
+                  "if (!pm.environment.get(\"user_id\")) {",
+                  "    throw new Error(\"user_id is not set. Run Create User first.\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{user_id}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Delete User Success",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"User deleted successfully.\",\n  \"data\": {},\n  \"meta\": {}\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Departments",
+      "item": [
+        {
+          "name": "GET Departments",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/departments?page={{page}}&per_page={{per_page}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "departments"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "{{page}}"
+                },
+                {
+                  "key": "per_page",
+                  "value": "{{per_page}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Department By ID",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}",
+                  "",
+                  "if (!pm.environment.get(\"department_id\")) {",
+                  "    throw new Error(\"department_id is not set. Run Create Department first.\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/departments/{{department_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "departments",
+                "{{department_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Create Department",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Create department returns success\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    pm.expect(pm.response.json().success).to.equal(true);",
+                  "});",
+                  "",
+                  "let res = pm.response.json();",
+                  "",
+                  "if (res.success && res.data && res.data.department) {",
+                  "    pm.environment.set(\"department_id\", res.data.department.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Engineering\",\n  \"manager_id\": \"{{user_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/departments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "departments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT Update Department",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}",
+                  "",
+                  "if (!pm.environment.get(\"department_id\")) {",
+                  "    throw new Error(\"department_id is not set. Run Create Department first.\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Engineering Updated\",\n  \"manager_id\": \"{{user_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/departments/{{department_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "departments",
+                "{{department_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Department",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}",
+                  "",
+                  "if (!pm.environment.get(\"department_id\")) {",
+                  "    throw new Error(\"department_id is not set. Run Create Department first.\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/departments/{{department_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "departments",
+                "{{department_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Employees",
+      "item": [
+        {
+          "name": "GET Employees",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/employees?page={{page}}&per_page={{per_page}}&name=alice&department_id={{department_id}}&role=employee",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "employees"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "{{page}}"
+                },
+                {
+                  "key": "per_page",
+                  "value": "{{per_page}}"
+                },
+                {
+                  "key": "name",
+                  "value": "alice"
+                },
+                {
+                  "key": "department_id",
+                  "value": "{{department_id}}"
+                },
+                {
+                  "key": "role",
+                  "value": "employee"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Employee By ID",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}",
+                  "",
+                  "if (!pm.environment.get(\"employee_id\")) {",
+                  "    throw new Error(\"employee_id is not set. Run Create Employee first.\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/employees/{{employee_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "employees",
+                "{{employee_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Create Employee",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let res = pm.response.json();",
+                  "if (res.success && res.data && res.data.employee) {",
+                  "    pm.environment.set(\"employee_id\", res.data.employee.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{employee_user_id}}\",\n  \"department_id\": \"{{department_id}}\",\n  \"phone\": \"0123456789\",\n  \"address\": \"Main street\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/employees",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "employees"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT Update Employee",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}",
+                  "",
+                  "if (!pm.environment.get(\"employee_id\")) {",
+                  "    throw new Error(\"employee_id is not set. Run Create Employee first.\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"department_id\": \"{{department_id}}\",\n  \"phone\": \"0999999999\",\n  \"address\": \"Updated address\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/employees/{{employee_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "employees",
+                "{{employee_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Employee",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}",
+                  "",
+                  "if (!pm.environment.get(\"employee_id\")) {",
+                  "    throw new Error(\"employee_id is not set. Run Create Employee first.\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/employees/{{employee_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "employees",
+                "{{employee_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Salaries",
+      "item": [
+        {
+          "name": "GET Salaries",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"List salaries returns success\", function () {",
+                  "    const responseBodyJson = pm.response.json();",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(responseBodyJson.success).to.equal(true);",
+                  "    pm.expect(responseBodyJson.data).to.have.property(\"salaries\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/salaries?page={{page}}&per_page={{per_page}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "salaries"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "{{page}}"
+                },
+                {
+                  "key": "per_page",
+                  "value": "{{per_page}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Salary By ID",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}",
+                  "",
+                  "if (!pm.environment.get(\"salary_id\")) {",
+                  "    throw new Error(\"salary_id is not set. Run Create Salary first.\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/salaries/{{salary_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "salaries",
+                "{{salary_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Create Salary",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}",
+                  "",
+                  "if (!pm.environment.get(\"employee_id\")) {",
+                  "    throw new Error(\"employee_id is not set. Run Create Employee first.\");",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Create salary returns success\", function () {",
+                  "    const responseBodyJson = pm.response.json();",
+                  "    pm.response.to.have.status(201);",
+                  "    pm.expect(responseBodyJson.success).to.equal(true);",
+                  "    pm.expect(responseBodyJson.data).to.have.property(\"salary\");",
+                  "    if (responseBodyJson.data.salary && responseBodyJson.data.salary.id) {",
+                  "        pm.environment.set(\"salary_id\", responseBodyJson.data.salary.id);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employee_id\": \"{{employee_id}}\",\n  \"amount\": 5000,\n  \"bonus\": 250,\n  \"deductions\": 100\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/salaries",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "salaries"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT Update Salary",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}",
+                  "",
+                  "if (!pm.environment.get(\"salary_id\")) {",
+                  "    throw new Error(\"salary_id is not set. Run Create Salary first.\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5500,\n  \"bonus\": 300,\n  \"deductions\": 150\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/salaries/{{salary_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "salaries",
+                "{{salary_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Salary",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}",
+                  "",
+                  "if (!pm.environment.get(\"salary_id\")) {",
+                  "    throw new Error(\"salary_id is not set. Run Create Salary first.\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/salaries/{{salary_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "salaries",
+                "{{salary_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Leaves",
+      "item": [
+        {
+          "name": "GET Leaves",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/leaves?page={{page}}&per_page={{per_page}}&status=approved&employee_id={{employee_id}}&from_date=2030-01-01&to_date=2030-12-31",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "leaves"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "{{page}}"
+                },
+                {
+                  "key": "per_page",
+                  "value": "{{per_page}}"
+                },
+                {
+                  "key": "status",
+                  "value": "approved"
+                },
+                {
+                  "key": "employee_id",
+                  "value": "{{employee_id}}"
+                },
+                {
+                  "key": "from_date",
+                  "value": "2030-01-01"
+                },
+                {
+                  "key": "to_date",
+                  "value": "2030-12-31"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Leave By ID",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}",
+                  "",
+                  "if (!pm.environment.get(\"leave_id\")) {",
+                  "    throw new Error(\"leave_id is not set. Run POST Apply Leave first.\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/leaves/{{leave_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "leaves",
+                "{{leave_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Apply Leave",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Apply leave returns success\", function () {",
+                  "    const responseBodyJson = pm.response.json();",
+                  "    pm.response.to.have.status(201);",
+                  "    pm.expect(responseBodyJson.success).to.equal(true);",
+                  "    pm.expect(responseBodyJson.data).to.have.property(\"leave\");",
+                  "    if (responseBodyJson.data.leave && responseBodyJson.data.leave.id) {",
+                  "        pm.environment.set(\"leave_id\", responseBodyJson.data.leave.id);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Annual leave request\",\n  \"start_date\": \"2030-07-10\",\n  \"end_date\": \"2030-07-12\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/leaves",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "leaves"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT Update Leave",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}",
+                  "",
+                  "if (!pm.environment.get(\"leave_id\")) {",
+                  "    throw new Error(\"leave_id is not set. Run POST Apply Leave first.\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated leave request\",\n  \"start_date\": \"2030-07-13\",\n  \"end_date\": \"2030-07-15\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/leaves/{{leave_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "leaves",
+                "{{leave_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Approve Leave",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}",
+                  "",
+                  "if (!pm.environment.get(\"leave_id\")) {",
+                  "    throw new Error(\"leave_id is not set. Run POST Apply Leave first.\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/leaves/{{leave_id}}/approve",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "leaves",
+                "{{leave_id}}",
+                "approve"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Reject Leave",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}",
+                  "",
+                  "if (!pm.environment.get(\"leave_id\")) {",
+                  "    throw new Error(\"leave_id is not set. Run POST Apply Leave first.\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/leaves/{{leave_id}}/reject",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "leaves",
+                "{{leave_id}}",
+                "reject"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Attendance",
+      "item": [
+        {
+          "name": "POST Check-in",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let res = pm.response.json();",
+                  "if (res.success && res.data && res.data.attendance) {",
+                  "    pm.environment.set(\"attendance_id\", res.data.attendance.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/attendance/check-in",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "attendance",
+                "check-in"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Check-out",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let res = pm.response.json();",
+                  "if (res.success && res.data && res.data.attendance) {",
+                  "    pm.environment.set(\"attendance_id\", res.data.attendance.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/attendance/check-out",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "attendance",
+                "check-out"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Attendance",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/attendance?page={{page}}&per_page={{per_page}}&employee_id={{employee_id}}&from_date=2030-01-01&to_date=2030-12-31",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "attendance"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "{{page}}"
+                },
+                {
+                  "key": "per_page",
+                  "value": "{{per_page}}"
+                },
+                {
+                  "key": "employee_id",
+                  "value": "{{employee_id}}"
+                },
+                {
+                  "key": "from_date",
+                  "value": "2030-01-01"
+                },
+                {
+                  "key": "to_date",
+                  "value": "2030-12-31"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Attendance By ID",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}",
+                  "",
+                  "if (!pm.environment.get(\"attendance_id\")) {",
+                  "    throw new Error(\"attendance_id is not set. Run POST Check-in first.\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/attendance/{{attendance_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "attendance",
+                "{{attendance_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Employees Report",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reports/employees",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reports",
+                "employees"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Departments Report",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reports/departments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reports",
+                "departments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Attendance Report",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reports/attendance?from_date=2030-01-01&to_date=2030-12-31",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reports",
+                "attendance"
+              ],
+              "query": [
+                {
+                  "key": "from_date",
+                  "value": "2030-01-01"
+                },
+                {
+                  "key": "to_date",
+                  "value": "2030-12-31"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Salaries Report",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reports/salaries",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reports",
+                "salaries"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Leaves Report",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"token\")) {",
+                  "    throw new Error(\"No token found. Please login first.\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reports/leaves",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reports",
+                "leaves"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
